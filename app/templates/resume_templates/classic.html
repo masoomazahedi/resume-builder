@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      {{ css | safe }}
+    </style>
+  </head>
+  <body>
+    <!-- ── Header ── -->
+    <div class="header">
+      <h1>{{ resume.full_name or "Your Name" }}</h1>
+
+      {% set has_contact = resume.email or resume.phone or resume.linkedin or
+      resume.github or resume.portfolio %} {% if has_contact %}
+      <div class="contact-info">
+        {% set contact_items = [] %} {% if resume.phone %}{% set _ =
+        contact_items.append(resume.phone) %}{% endif %} {% if resume.github
+        %}{% set _ = contact_items.append(resume.github) %}{% endif %} {% if
+        resume.email %}{% set _ = contact_items.append(resume.email) %}{% endif
+        %} {% if resume.linkedin %}{% set _ =
+        contact_items.append(resume.linkedin) %}{% endif %} {% if
+        resume.portfolio %}{% set _ = contact_items.append(resume.portfolio)
+        %}{% endif %} {{ contact_items | join(" - ") }}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ── Summary ── -->
+    {% if resume.summary %}
+    <div class="summary-block">"{{ resume.summary }}"</div>
+    {% endif %}
+
+    <!-- ── Skills ── -->
+    {% if resume.skills %}
+    <div class="section">
+      <div class="section-title">Skills</div>
+      <div class="skills-table">
+        <div class="skill-row">
+          <span class="skill-label">Technologies:</span>
+          <span class="skill-value">{{ resume.skills | join(", ") }}</span>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ── Experience ── -->
+    {% if resume.experience %}
+    <div class="section">
+      <div class="section-title">Experience</div>
+      {% for exp in resume.experience %}
+      <div class="entry">
+        <div class="entry-top">
+          <span class="entry-role"
+            >{{ exp.role }}{% if exp.company %} - {{ exp.company }}{% endif
+            %}</span
+          >
+          <span class="entry-date"
+            >{{ exp.start_date }}{% if exp.end_date %} - {{ exp.end_date }}{%
+            else %} - Present{% endif %}</span
+          >
+        </div>
+        {% if exp.description %}
+        <ul class="entry-bullets">
+          {% for line in exp.description.split('\n') %} {% if line.strip() %}
+          <li>
+            {{ line.strip().lstrip('-').lstrip('•').lstrip('*').strip() }}
+          </li>
+          {% endif %} {% endfor %}
+        </ul>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ── Projects ── -->
+    {% if resume.projects %}
+    <div class="section">
+      <div class="section-title">Project</div>
+      {% for proj in resume.projects %}
+      <div class="project-entry">
+        <div class="project-top">
+          <span class="project-title">{{ proj.title }}</span>
+          {% if proj.link %}<span class="project-role">{{ proj.link }}</span>{%
+          endif %}
+        </div>
+        {% if proj.tech_stack %}
+        <div class="project-tech">
+          <strong>Technologies:</strong> {{ proj.tech_stack }}
+        </div>
+        {% endif %} {% if proj.description %}
+        <ul class="entry-bullets">
+          {% for line in proj.description.split('\n') %} {% if line.strip() %}
+          <li>
+            {{ line.strip().lstrip('-').lstrip('•').lstrip('*').strip() }}
+          </li>
+          {% endif %} {% endfor %}
+        </ul>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ── Education ── -->
+    {% if resume.education %}
+    <div class="section">
+      <div class="section-title">Education</div>
+      {% for edu in resume.education %}
+      <div class="edu-entry">
+        <div class="edu-left">
+          <div class="edu-degree">{{ edu.degree }}</div>
+          <div class="edu-school">
+            {{ edu.school }}{% if edu.gpa %} — GPA: {{ edu.gpa }}{% endif %}
+          </div>
+        </div>
+        <div class="edu-date">
+          {{ edu.start_date }}{% if edu.end_date %} - {{ edu.end_date }}{% endif
+          %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ── Certifications ── -->
+    {% if resume.certifications %}
+    <div class="section">
+      <div class="section-title">Certifications</div>
+      {% for cert in resume.certifications %}
+      <div class="cert-entry">
+        <strong>{{ cert.name }}</strong>
+        {% if cert.issuer %} — {{ cert.issuer }}{% endif %} {% if cert.date %}
+        ({{ cert.date }}){% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </body>
+</html>

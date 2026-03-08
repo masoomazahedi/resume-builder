@@ -1,0 +1,53 @@
+{% extends "base.html" %} {% block title %}Dashboard{% endblock %} {% block
+content %}
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h2>Your Resumes</h2>
+    <a href="{{ url_for('resume.new_resume') }}" class="btn-primary"
+      >+ New Resume</a
+    >
+  </div>
+
+  {% if resumes %}
+  <div class="resume-grid">
+    {% for r in resumes %}
+    <div class="resume-card">
+      <h3>{{ r.title }}</h3>
+      <p>Last updated: {{ r.updated_at.strftime('%b %d, %Y') }}</p>
+      <div class="card-actions">
+        <a
+          href="{{ url_for('resume.edit_resume', resume_id=r.id) }}"
+          class="edit-btn"
+          >Edit</a
+        >
+        <a
+          href="{{ url_for('ats.score_resume', resume_id=r.id) }}"
+          class="score-btn"
+          >ATS Score</a
+        >
+        <a
+          href="{{ url_for('export.export_pdf', resume_id=r.id) }}"
+          class="pdf-btn"
+          >Download PDF</a
+        >
+        <form
+          method="POST"
+          action="{{ url_for('resume.delete_resume', resume_id=r.id) }}"
+          onsubmit="return confirm('Delete this resume?');"
+        >
+          <button type="submit" class="btn-danger">Delete</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <p>No resumes yet — create your first one!</p>
+    <a href="{{ url_for('resume.new_resume') }}" class="btn-primary"
+      >Create Resume</a
+    >
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

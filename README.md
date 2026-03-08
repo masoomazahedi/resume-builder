@@ -1,0 +1,6 @@
+# Project name: Resume-builder
+app name: ResumeMind
+#### Video Demo:  <[(https://www.youtube.com/watch?v=xlXNs0mW55g)]>
+#### Description:
+ResumeMind is a full-stack web application that helps job seekers build professional resumes and evaluate how well they match any job description using a custom-built ATS (Applicant Tracking System) scoring engine.
+Users create an account, build their resume through a structured form covering personal info, work experience, education, skills, projects, and certifications, then export it as a clean single-column PDF. The core feature is the scoring engine that the user can paste any job description and the app analyzes the resume across 8 dimensions including keyword coverage, skills depth, quantified impact, seniority alignment, and human readability, returning a score out of 98 with a radar chart visualization and a two-panel feedback report that separates ATS gaps from resume quality issues. Every lost point comes with a specific, actionable suggestion rather than a vague number.

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}ATS Score — {{ resume.title }}{% endblock %}
+
+{% block content %}
+<div class="builder-container">
+    <h2>ATS Score Resume</h2>
+    <p style="color: var(--gray-600); margin-bottom: 24px;">
+        Paste the job description below to score <strong>{{ resume.title }}</strong> against it.
+    </p>
+
+    <form method="POST">
+        <div class="form-section">
+            <h3>Job Description</h3>
+            <textarea name="job_description" placeholder="Paste the full job description here..."
+                      style="min-height: 280px;" required></textarea>
+        </div>
+        <div class="builder-actions">
+            <a href="{{ url_for('dashboard.index') }}" class="btn-secondary">Cancel</a>
+            <button type="submit" class="btn-primary">Run ATS Score</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

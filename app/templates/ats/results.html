@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% block title %}ATS Results — {{ resume.title }}{% endblock %}
+
+{% block content %}
+<div class="results-container">
+
+    <!-- Score Hero -->
+    <div class="score-hero score-{{ result.color }}">
+        <div class="score-circle">
+            <span class="score-number">{{ result.total }}</span>
+            <span class="score-max">/98</span>
+        </div>
+        <div class="score-info">
+            <h2>{{ result.rating }}</h2>
+            <p>ATS Score for <strong>{{ resume.title }}</strong></p>
+            <p style="margin-top: 6px; font-size: 0.8rem; color: var(--gray-400);">
+                Scored against job description on {{ score.created_at.strftime('%b %d, %Y at %I:%M %p') }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Eligibility Flags -->
+    {% if result.eligibility_flags %}
+    <div class="flags-section">
+        <h3>⚠️ Eligibility Risks</h3>
+        <p class="flags-note">These are separate from your score — address them before applying.</p>
+        {% for flag in result.eligibility_flags %}
+        <div class="flag flag-{{ flag.level|lower }}">
+            <strong>{{ flag.level }}</strong> — {{ flag.message }}
+            <p>{{ flag.action }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Radar Chart + Score Summary -->
+    <div class="chart-summary-grid">
+        <div class="report-card chart-card">
+            <h3>Score Breakdown</h3>
+            <canvas id="radarChart"
+                data-scores='[
+                    {{ result.breakdown.keyword_coverage.score }},
+                    {{ result.breakdown.skills_depth.score }},
+                    {{ result.breakdown.quantified_impact.score }},
+                    {{ result.breakdown.seniority_alignment.score }},
+                    {{ result.breakdown.section_completeness.score }},
+                    {{ result.breakdown.human_readability.score }},
+                    {{ result.breakdown.action_verbs.score }},
+                    {{ result.breakdown.formatting_safety.score }}
+                ]'
+                data-maxes='[25, 18, 15, 12, 8, 8, 6, 6]'
+                data-labels='["Keywords", "Skills Depth", "Impact", "Seniority", "Sections", "Readability", "Verbs", "Formatting"]'>
+            </canvas>
+        </div>
+
+        <div class="report-card summary-card">
+            <h3>Quick Summary</h3>
+            <div class="summary-list">
+                <div class="summary-row">
+                    <span>Keywords matched</span>
+                    <strong>{{ result.breakdown.keyword_coverage.matched | length }}</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Keywords missing</span>
+                    <strong class="text-red">{{ result.breakdown.keyword_coverage.missing | length }}</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Sections complete</span>
+                    <strong>{{ 5 - result.breakdown.section_completeness.missing | length }}/5</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Eligibility risks</span>
+                    <strong class="{{ 'text-red' if result.eligibility_flags else 'text-green' }}">
+                        {{ result.eligibility_flags | length }}
+                    </strong>
+                </div>
+                <div class="summary-row">
+                    <span>Job level expected</span>
+                    <strong>{{ result.breakdown.seniority_alignment.jd_level | capitalize }}</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Resume signals</span>
+                    <strong>{{ result.breakdown.seniority_alignment.resume_level | capitalize }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Two Report Panels -->
+    <div class="reports-grid">
+
+        <!-- ATS Gaps -->
+        <div class="report-card">
+            <h3>🤖 ATS Gaps</h3>
+
+            <div class="dim-row">
+                <div class="dim-header">
+                    <span>Keyword Coverage</span>
+                    <span>{{ result.breakdown.keyword_coverage.score }}/25</span>
+                </div>
+                <div class="progress-bar">
+                    <div style="width: {{ (result.breakdown.keyword_coverage.score/25*100)|round }}%"></div>
+                </div>
+                {% if result.breakdown.keyword_coverage.missing %}
+                <p class="dim-detail">Missing:
+                    {% for k in result.breakdown.keyword_coverage.missing[:6] %}
+                        <span class="tag tag-red">{{ k.term }}</span>
+                    {% endfor %}
+                </p>
+                {% else %}
+                <p class="dim-detail text-green">✓ All key terms matched</p>
+                {% endif %}
+            </div>
+
+            <div class="dim-row">
+                <div class="dim-header">
+                    <span>Skills Depth</span>
+                    <span>{{ result.breakdown.skills_depth.score }}/18</span>
+                </div>
+                <div class="progress-bar">
+                    <div style="width: {{ (result.breakdown.skills_depth.score/18*100)|round }}%"></div>
+                </div>
+                {% for ws in result.breakdown.skills_depth.weak_skills[:2] %}
+                <p class="dim-detail suggestion">💡 {{ ws.suggestion }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="dim-row">
+                <div class="dim-header">
+                    <span>Seniority Alignment</span>
+                    <span>{{ result.breakdown.seniority_alignment.score }}/12</span>
+                </div>
+                <div class="progress-bar">
+                    <div style="width: {{ (result.breakdown.seniority_alignment.score/12*100)|round }}%"></div>
+                </div>
+                <p class="dim-detail">
+                    Job expects <strong>{{ result.breakdown.seniority_alignment.jd_level }}</strong> —
+                    Your resume signals <strong>{{ result.breakdown.seniority_alignment.resume_level }}</strong>
+                </p>
+            </div>
+
+            <div class="dim-row">
+                <div class="dim-header">
+                    <span>Section Completeness</span>
+                    <span>{{ result.breakdown.section_completeness.score }}/8</span>
+                </div>
+                <div class="progress-bar">
+                    <div style="width: {{ (result.breakdown.section_completeness.score/8*100)|round }}%"></div>
+                </div>
+                {% if result.breakdown.section_completeness.missing %}
+                <p class="dim-detail">Missing:
+                    {% for s in result.breakdown.section_completeness.missing %}
+                        <span class="tag tag-red">{{ s }}</span>
+                    {% endfor %}
+                </p>
+                {% else %}
+                <p class="dim-detail text-green">✓ All sections present</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Resume Quality -->
+        <div class="report-card">
+            <h3>👤 Resume Quality</h3>
+
+            <div class="dim-row">
+                <div class="dim-header">
+                    <span>Quantified Impact</span>
+                    <span>{{ result.breakdown.quantified_impact.score }}/15</span>
+                </div>
+                <div class="progress-bar">
+                    <div style="width: {{ (result.breakdown.quantified_impact.score/15*100)|round }}%"></div>
+                </div>
+                {% if result.breakdown.quantified_impact.weak_bullets %}
+                <p class="dim-detail suggestion">
+                    💡 Add metrics to: <em>"{{ result.breakdown.quantified_impact.weak_bullets[0][:70] }}..."</em>
+                </p>
+                {% else %}
+                <p class="dim-detail text-green">✓ Strong use of metrics</p>
+                {% endif %}
+            </div>
+
+            <div class="dim-row">
+                <div class="dim-header">
+                    <span>Human Readability</span>
+                    <span>{{ result.breakdown.human_readability.score }}/8</span>
+                </div>
+                <div class="progress-bar">
+                    <div style="width: {{ (result.breakdown.human_readability.score/8*100)|round }}%"></div>
+                </div>
+                {% for w in result.breakdown.human_readability.warnings %}
+                <p class="dim-detail suggestion">💡 {{ w }}</p>
+                {% endfor %}
+                {% if not result.breakdown.human_readability.warnings %}
+                <p class="dim-detail text-green">✓ Reads naturally</p>
+                {% endif %}
+            </div>
+
+            <div class="dim-row">
+                <div class="dim-header">
+                    <span>Action Verb Quality</span>
+                    <span>{{ result.breakdown.action_verbs.score }}/6</span>
+                </div>
+                <div class="progress-bar">
+                    <div style="width: {{ (result.breakdown.action_verbs.score/6*100)|round }}%"></div>
+                </div>
+                {% if result.breakdown.action_verbs.suggestions %}
+                <p class="dim-detail suggestion">
+                    💡 {{ result.breakdown.action_verbs.suggestions[0][:90] }}
+                </p>
+                {% else %}
+                <p class="dim-detail text-green">✓ Strong action verbs used</p>
+                {% endif %}
+            </div>
+
+            <div class="dim-row">
+                <div class="dim-header">
+                    <span>Formatting Safety</span>
+                    <span>{{ result.breakdown.formatting_safety.score }}/6</span>
+                </div>
+                <div class="progress-bar">
+                    <div style="width: {{ (result.breakdown.formatting_safety.score/6*100)|round }}%"></div>
+                </div>
+                {% for w in result.breakdown.formatting_safety.warnings %}
+                <p class="dim-detail suggestion">💡 {{ w }}</p>
+                {% endfor %}
+                {% if not result.breakdown.formatting_safety.warnings %}
+                <p class="dim-detail text-green">✓ ATS-safe formatting</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="builder-actions">
+        <a href="{{ url_for('dashboard.index') }}" class="btn-secondary">Dashboard</a>
+        <a href="{{ url_for('resume.edit_resume', resume_id=resume.id) }}" class="btn-secondary">Edit Resume</a>
+        <a href="{{ url_for('ats.score_resume', resume_id=resume.id) }}" class="btn-secondary">Re-score</a>
+        <a href="{{ url_for('export.export_pdf', resume_id=resume.id) }}" class="btn-primary">Download PDF</a>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/score_chart.js') }}"></script>
+{% endblock %}

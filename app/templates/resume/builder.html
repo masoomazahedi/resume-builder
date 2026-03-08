@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}Resume Builder{% endblock %}
+
+{% block content %}
+<div class="builder-container">
+    <!-- Dynamically changes heading based on whether user is editing an existing resume or creating a new one -->
+    <h2>{{ "Edit Resume" if resume else "Build Your Resume" }}</h2>
+
+    <form method="POST">
+
+        <!-- Resume Title -->
+        <div class="form-section">
+            <h3>Resume Title</h3>
+            <input type="text" name="title" placeholder="e.g. Software Engineer Resume"
+                   value="{{ resume.title if resume else '' }}" required />
+        </div>
+
+        <!-- Personal Info -->
+        <div class="form-section">
+            <h3>Personal Information</h3>
+            <!-- Each field pre-fills from the existing resume object if available, otherwise defaults to empty string -->
+            <input type="text" name="full_name" placeholder="Full Name"
+                   value="{{ resume.full_name if resume else '' }}" />
+            <input type="email" name="email" placeholder="Email"
+                   value="{{ resume.email if resume else '' }}" />
+            <input type="text" name="phone" placeholder="Phone"
+                   value="{{ resume.phone if resume else '' }}" />
+            <input type="url" name="linkedin" placeholder="LinkedIn URL"
+                   value="{{ resume.linkedin if resume else '' }}" />
+            <input type="url" name="github" placeholder="GitHub URL"
+                   value="{{ resume.github if resume else '' }}" />
+            <input type="url" name="portfolio" placeholder="Portfolio URL"
+                   value="{{ resume.portfolio if resume else '' }}" />
+            <textarea name="summary" placeholder="Professional Summary">{{ resume.summary if resume else '' }}</textarea>
+        </div>
+
+        <!-- Experience -->
+        <div class="form-section">
+            <h3>Work Experience</h3>
+            <div id="experience-container"></div>
+            <button type="button" onclick="addEntry('experience')">+ Add Experience</button>
+            <input type="hidden" name="experience" id="experience-data" value="[]" />
+        </div>
+
+        <!-- Education -->
+        <div class="form-section">
+            <h3>Education</h3>
+            <div id="education-container"></div>
+            <button type="button" onclick="addEntry('education')">+ Add Education</button>
+            <input type="hidden" name="education" id="education-data" value="[]" />
+        </div>
+
+        <!-- Skills -->
+        <div class="form-section">
+            <h3>Skills</h3>
+            <div id="skills-container"></div>
+            <button type="button" onclick="addSkill()">+ Add Skill</button>
+            <input type="hidden" name="skills" id="skills-data" value="[]" />
+        </div>
+
+        <!-- Projects -->
+        <div class="form-section">
+            <h3>Projects</h3>
+            <div id="projects-container"></div>
+            <button type="button" onclick="addEntry('projects')">+ Add Project</button>
+            <input type="hidden" name="projects" id="projects-data" value="[]" />
+        </div>
+
+        <!-- Certifications -->
+        <div class="form-section">
+            <h3>Certifications</h3>
+            <div id="certifications-container"></div>
+            <button type="button" onclick="addEntry('certifications')">+ Add Certification</button>
+            <input type="hidden" name="certifications" id="certifications-data" value="[]" />
+        </div>
+
+       <div class="builder-actions">
+    <a href="{{ url_for('dashboard.index') }}" class="btn-secondary">Cancel</a>
+    <button type="submit" class="btn-primary" onclick="collectData()">Save Resume</button>
+</div>
+    </form>
+</div>
+
+<!-- Hidden data bridge: passes existing Jinja2/server-side resume data into JavaScript safely via data attributes -->
+<!-- tojson filter escapes the data properly to prevent XSS and JSON parse errors -->
+<div id="resume-data"
+     data-experience='{{ resume.experience | tojson if resume else "[]" }}'
+     data-education='{{ resume.education | tojson if resume else "[]" }}'
+     data-skills='{{ resume.skills | tojson if resume else "[]" }}'
+     data-projects='{{ resume.projects | tojson if resume else "[]" }}'
+     data-certifications='{{ resume.certifications | tojson if resume else "[]" }}'
+     style="display:none;">
+</div>
+
+<script>
+// Read the hidden div's data attributes to retrieve server-rendered resume data
+   const el = document.getElementById("resume-data");
+const existingData = {
+    experience: JSON.parse(el.dataset.experience),
+    education: JSON.parse(el.dataset.education),
+    skills: JSON.parse(el.dataset.skills),
+    projects: JSON.parse(el.dataset.projects),
+    certifications: JSON.parse(el.dataset.certifications)
+}; 
+
+// Defines which input fields each dynamic section should render
+// Keys match section IDs; values are ordered lists of field names
+    const fields = {
+        experience: ["company", "role", "start_date", "end_date", "description"],
+        education: ["school", "degree", "start_date", "end_date", "gpa"],
+        projects: ["title", "description", "tech_stack", "link"],
+        certifications: ["name", "issuer", "date"]
+    };
+
+// Build an input for each field defined in the fields map above
+// Underscores in field names are replaced with spaces for readable placeholders
+    function addEntry(section, data = {}) {
+        const container = document.getElementById(`${section}-container`);
+        const div = document.createElement("div");
+        div.className = "dynamic-entry";
+        div.innerHTML = fields[section].map(f => `
+            <input type="text" placeholder="${f.replace(/_/g, ' ')}"
+                   data-section="${section}" data-field="${f}"
+                   value="${data[f] || ''}" />
+        `).join("") + `<button type="button" onclick="this.parentElement.remove(); updateData('${section}')">Remove</button>`;
+        container.appendChild(div);
+        div.querySelectorAll("input").forEach(i => i.addEventListener("input", () => updateData(section)));
+    }
+    // Creates a single skill text input with a remove button
+    //'value' is passed when loading existing skills
+    function addSkill(value = "") {
+        const container = document.getElementById("skills-container");
+        const div = document.createElement("div");
+        div.className = "skill-entry";
+        div.innerHTML = `
+            <input type="text" placeholder="e.g. Python" value="${value}"
+                   oninput="updateSkills()" />
+            <button type="button" onclick="this.parentElement.remove(); updateSkills()">x</button>
+        `;
+        container.appendChild(div);
+    }
+
+    // Reads all input values from a section's dynamic entries and serializes them to JSON
+    // Stored in the corresponding hidden input so the form POST picks it up
+
+    function updateData(section) {
+        const entries = [];
+        document.querySelectorAll(`#${section}-container .dynamic-entry`).forEach(entry => {
+            const obj = {};
+            entry.querySelectorAll("input[data-field]").forEach(i => obj[i.dataset.field] = i.value);
+            entries.push(obj);
+        });
+        document.getElementById(`${section}-data`).value = JSON.stringify(entries);
+    }
+
+    function updateSkills() {
+        const skills = [...document.querySelectorAll("#skills-container input")]
+            .map(i => i.value.trim()).filter(Boolean);
+        document.getElementById("skills-data").value = JSON.stringify(skills);
+    }
+
+    // Called on form submit — ensures all dynamic section data is flushed into hidden inputs
+    // before the browser sends the POST request
+    function collectData() {
+        ["experience", "education", "projects", "certifications"].forEach(updateData);
+        updateSkills();
+    }
+
+    // On page load: populate the form with any existing resume data (edit mode)
+    // Skills are handled separately since they're a flat array, not an array of objects
+    Object.keys(existingData).forEach(section => {
+        if (section === "skills") {
+            existingData.skills.forEach(s => addSkill(s));
+        } else {
+            existingData[section].forEach(entry => addEntry(section, entry));
+        }
+    });
+</script>
+{% endblock %}
+
+

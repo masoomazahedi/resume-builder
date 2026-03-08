@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}ResumeAI — Beat the ATS{% endblock %}
+
+{% block content %}
+<div class="landing">
+
+    <!-- Hero -->
+    <div class="hero">
+        <div class="hero-text">
+            <div class="hero-badge">Free & Open Source</div>
+            <h1>Build a resume that<br/><span>beats the ATS</span></h1>
+            <p>
+                75% of resumes are rejected before a human reads them.
+                ResumeMind scores your resume against any job description
+                using the same signals real ATS systems use — then tells
+                you exactly what to fix.
+            </p>
+            <div class="hero-actions">
+                <a href="{{ url_for('auth.register') }}" class="btn-primary">Get Started Free</a>
+                <a href="{{ url_for('auth.login') }}" class="btn-secondary">Log In</a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="mock-score-card">
+                <div class="mock-score-header">
+                    <span>ATS Score</span>
+                    <span class="mock-badge">Excellent</span>
+                </div>
+                <div class="mock-score-number">84<span>/98</span></div>
+                <div class="mock-bars">
+                    <div class="mock-bar-row">
+                        <span>Keyword Coverage</span>
+                        <div class="mock-bar"><div style="width:88%"></div></div>
+                    </div>
+                    <div class="mock-bar-row">
+                        <span>Skills Depth</span>
+                        <div class="mock-bar"><div style="width:75%"></div></div>
+                    </div>
+                    <div class="mock-bar-row">
+                        <span>Impact Metrics</span>
+                        <div class="mock-bar"><div style="width:60%"></div></div>
+                    </div>
+                    <div class="mock-bar-row">
+                        <span>Readability</span>
+                        <div class="mock-bar"><div style="width:92%"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features -->
+    <div class="features">
+        <div class="feature-card">
+            <div class="feature-icon">📝</div>
+            <h3>Smart Resume Builder</h3>
+            <p>Structured form that guides you through every section. Clean ATS-safe PDF export included.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🎯</div>
+            <h3>8-Dimension ATS Score</h3>
+            <p>Keyword coverage, skills depth, seniority alignment, impact quality and more — all scored transparently.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">💡</div>
+            <h3>Actionable Feedback</h3>
+            <p>Every lost point comes with a specific fix. No vague scores — just clear steps to improve.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">👤</div>
+            <h3>Human Readability Check</h3>
+            <p>We flag resumes that are optimized for machines but unreadable by humans. Balance both.</p>
+        </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-section">
+        <h2>Your next job starts with a better resume</h2>
+        <p>Create your account and score your resume in under 5 minutes.</p>
+        <a href="{{ url_for('auth.register') }}" class="btn-primary">Start for Free</a>
+    </div>
+
+</div>
+{% endblock %}
